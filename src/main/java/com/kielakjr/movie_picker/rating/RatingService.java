@@ -20,9 +20,9 @@ public class RatingService {
 
     public RatingResponse createRating(RatingRequest request) {
         Movie movie = movieRepository.findById(request.getMovieId())
-                .orElseThrow(() -> new RuntimeException("Movie not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
         User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
         Rating rating = Rating.builder()
                 .movie(movie)
                 .user(user)

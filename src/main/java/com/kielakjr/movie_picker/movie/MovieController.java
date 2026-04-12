@@ -1,5 +1,6 @@
 package com.kielakjr.movie_picker.movie;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,18 +22,18 @@ public class MovieController {
     private final MovieService movieService;
 
     @GetMapping
-    public List<MovieResponse> getAllMovies() {
-        return movieService.getAllMovies();
+    public ResponseEntity<List<MovieResponse>> getAllMovies() {
+        return ResponseEntity.ok(movieService.getAllMovies());
     }
 
     @GetMapping("/{id}")
-    public MovieResponse getMovieById(@PathVariable Long id) {
-        return movieService.getMovieById(id);
+    public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
+        return ResponseEntity.ok(movieService.getMovieById(id));
     }
 
     @PostMapping
-    public MovieResponse createMovie(@RequestBody @Valid MovieRequest request) {
-        return movieService.createMovie(request);
+    public ResponseEntity<MovieResponse> createMovie(@RequestBody @Valid MovieRequest request) {
+        return ResponseEntity.created(null).body(movieService.createMovie(request));
     }
 
 }

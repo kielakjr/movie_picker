@@ -23,7 +23,7 @@ public class MovieService {
 
     public MovieResponse getMovieById(Long id) {
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Movie not found with id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Movie not found with id: " + id));
         return mapToResponse(movie);
     }
 

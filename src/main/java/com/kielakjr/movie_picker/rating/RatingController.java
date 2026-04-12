@@ -1,5 +1,6 @@
 package com.kielakjr.movie_picker.rating;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,12 +21,12 @@ public class RatingController {
     private final RatingService ratingService;
 
     @PostMapping
-    public RatingResponse createRating(@RequestBody @Valid RatingRequest request) {
-        return ratingService.createRating(request);
+    public ResponseEntity<RatingResponse> createRating(@RequestBody @Valid RatingRequest request) {
+        return ResponseEntity.created(null).body(ratingService.createRating(request));
     }
 
     @GetMapping("/user/{userId}")
-    public List<RatingResponse> getRatingsByUserId(@PathVariable Long userId) {
-        return ratingService.getRatingsByUserId(userId);
+    public ResponseEntity<List<RatingResponse>> getRatingsByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(ratingService.getRatingsByUserId(userId));
     }
 }
