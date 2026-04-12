@@ -47,7 +47,7 @@ class MovieControllerIT {
             mockMvc.perform(post("/api/movies")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").isNumber())
                     .andExpect(jsonPath("$.title").value("Inception"))
                     .andExpect(jsonPath("$.description").value("A thief who steals corporate secrets through dream-sharing technology."))

@@ -3,7 +3,6 @@ package com.kielakjr.movie_picker.rating;
 import com.kielakjr.movie_picker.config.TestcontainersConfig;
 import com.kielakjr.movie_picker.movie.Movie;
 import com.kielakjr.movie_picker.movie.MovieRepository;
-import com.kielakjr.movie_picker.recommendation.RecommendationService;
 import com.kielakjr.movie_picker.user.User;
 import com.kielakjr.movie_picker.user.UserRepository;
 import org.junit.jupiter.api.Nested;
@@ -44,9 +43,6 @@ class RatingControllerIT {
     @Autowired
     private RatingRepository ratingRepository;
 
-    @Autowired
-    private RecommendationService recommendationService;
-
     private User persistUser(String email) {
         return userRepository.save(User.builder().email(email).build());
     }
@@ -73,7 +69,7 @@ class RatingControllerIT {
             mockMvc.perform(post("/api/ratings")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").isNumber())
                     .andExpect(jsonPath("$.movieId").value(matrix.getId()))
                     .andExpect(jsonPath("$.userId").value(alice.getId()))
@@ -97,7 +93,7 @@ class RatingControllerIT {
             mockMvc.perform(post("/api/ratings")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.rating").value(1));
         }
 
@@ -115,7 +111,7 @@ class RatingControllerIT {
             mockMvc.perform(post("/api/ratings")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
-                    .andExpect(status().isOk())
+                    .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.rating").value(10));
         }
 
