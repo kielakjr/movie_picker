@@ -1,5 +1,9 @@
 package com.kielakjr.movie_picker.movie;
 
+import org.hibernate.annotations.Array;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,4 +32,8 @@ public class Movie {
     private String description;
 
     private String genre;
+
+    @JdbcTypeCode(SqlTypes.VECTOR)
+    @Array(length = 384)
+    private float[] embedding;
 }
