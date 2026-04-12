@@ -6,6 +6,7 @@ import com.kielakjr.movie_picker.user.User;
 import com.kielakjr.movie_picker.user.UserRepository;
 import com.kielakjr.movie_picker.movie.Movie;
 import com.kielakjr.movie_picker.movie.MovieRepository;
+import com.kielakjr.movie_picker.recommendation.RecommendationService;
 
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class RatingService {
     private final RatingRepository ratingRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
+    private final RecommendationService recommendationService;
 
     public RatingResponse createRating(RatingRequest request) {
         Movie movie = movieRepository.findById(request.getMovieId())
@@ -26,6 +28,7 @@ public class RatingService {
                 .user(user)
                 .rating(request.getRating())
                 .build();
+        recommendationService.updateUserProfile(request.getUserId());
         return mapToResponse(ratingRepository.save(rating));
     }
 
