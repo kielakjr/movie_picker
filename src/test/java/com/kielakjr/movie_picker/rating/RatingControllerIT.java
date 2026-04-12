@@ -1,7 +1,9 @@
 package com.kielakjr.movie_picker.rating;
 
+import com.kielakjr.movie_picker.config.TestcontainersConfig;
 import com.kielakjr.movie_picker.movie.Movie;
 import com.kielakjr.movie_picker.movie.MovieRepository;
+import com.kielakjr.movie_picker.recommendation.RecommendationService;
 import com.kielakjr.movie_picker.user.User;
 import com.kielakjr.movie_picker.user.UserRepository;
 import org.junit.jupiter.api.Nested;
@@ -9,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestcontainersConfig.class)
 @Transactional
 class RatingControllerIT {
 
@@ -39,6 +43,9 @@ class RatingControllerIT {
 
     @Autowired
     private RatingRepository ratingRepository;
+
+    @Autowired
+    private RecommendationService recommendationService;
 
     private User persistUser(String email) {
         return userRepository.save(User.builder().email(email).build());

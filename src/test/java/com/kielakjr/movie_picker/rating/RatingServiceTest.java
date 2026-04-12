@@ -2,6 +2,7 @@ package com.kielakjr.movie_picker.rating;
 
 import com.kielakjr.movie_picker.movie.Movie;
 import com.kielakjr.movie_picker.movie.MovieRepository;
+import com.kielakjr.movie_picker.recommendation.RecommendationService;
 import com.kielakjr.movie_picker.user.User;
 import com.kielakjr.movie_picker.user.UserRepository;
 import org.junit.jupiter.api.Nested;
@@ -31,6 +32,9 @@ class RatingServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RecommendationService recommendationService;
 
     @InjectMocks
     private RatingService ratingService;

@@ -3,11 +3,13 @@ package com.kielakjr.movie_picker.movie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import com.kielakjr.movie_picker.ai.EmbeddingClient;
 
 @Component
+@Profile("!test")
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationListener<ApplicationReadyEvent> {
 
