@@ -33,6 +33,8 @@ public class Movie {
 
     private String genre;
 
+    private String posterUrl;
+
     @JdbcTypeCode(SqlTypes.VECTOR)
     @Array(length = 384)
     private float[] embedding;

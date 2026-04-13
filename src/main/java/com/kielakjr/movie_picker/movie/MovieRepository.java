@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
+    boolean existsByTitle(String title);
     @Query(value = """
             SELECT * FROM movies
             WHERE id NOT IN (

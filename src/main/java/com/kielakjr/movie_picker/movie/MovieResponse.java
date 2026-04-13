@@ -14,4 +14,5 @@ public class MovieResponse {
     private String title;
     private String description;
     private String genre;
+    private String posterUrl;
 }

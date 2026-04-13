@@ -17,4 +17,5 @@ public class MovieRequest {
     private String description;
     @NotBlank(message = "Genre is required")
     private String genre;
+    private String posterUrl;
 }

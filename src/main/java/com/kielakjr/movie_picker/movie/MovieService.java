@@ -16,6 +16,7 @@ public class MovieService {
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .genre(request.getGenre())
+                .posterUrl(request.getPosterUrl())
                 .build();
         Movie savedMovie = movieRepository.save(movie);
         return mapToResponse(savedMovie);
@@ -40,6 +41,7 @@ public class MovieService {
                 .title(movie.getTitle())
                 .description(movie.getDescription())
                 .genre(movie.getGenre())
+                .posterUrl(movie.getPosterUrl())
                 .build();
     }
 }

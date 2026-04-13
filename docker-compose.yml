@@ -38,6 +38,7 @@ services:
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       EMBEDDING_SERVICE_URL: http://ai:8000
+      TMDB_TOKEN: ${TMDB_TOKEN}
     depends_on:
       postgres:
         condition: service_healthy
