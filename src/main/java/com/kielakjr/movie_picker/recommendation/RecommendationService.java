@@ -26,12 +26,9 @@ public class RecommendationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        List<Long> ratedMovieIds = ratingRepository.findByUserId(userId)
-                .stream()
-                .map(rating -> rating.getMovie().getId())
-                .toList();
+        boolean hasRatings = ratingRepository.countByUserId(userId) > 0;
 
-        if (user.getProfileVector() == null || ratedMovieIds.isEmpty()) {
+        if (user.getProfileVector() == null || !hasRatings) {
             return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
         }
 
@@ -81,15 +78,9 @@ public class RecommendationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        List<Long> ratedMovieIds = ratingRepository.findByUserId(userId)
-                .stream()
-                .map(r -> r.getMovie().getId())
-                .toList();
-
         if (user.getProfileVector() == null) {
-            return movieRepository.findAll().stream()
-                    .filter(m -> !ratedMovieIds.contains(m.getId()))
-                    .limit(5)
+            return movieRepository.findUnratedMovies(userId, 5)
+                    .stream()
                     .map(this::toMovieResponse)
                     .toList();
         }
