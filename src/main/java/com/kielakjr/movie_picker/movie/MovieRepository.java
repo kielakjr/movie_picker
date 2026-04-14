@@ -44,4 +44,15 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             @Param("userId") Long userId,
             @Param("vector") float[] vector,
             @Param("limit") int limit);
+
+    @Query(value = """
+            SELECT * FROM movies
+            WHERE id NOT IN (
+                SELECT movie_id FROM ratings WHERE user_id = :userId
+            )
+            LIMIT :limit
+            """, nativeQuery = true)
+    List<Movie> findUnratedMovies(
+            @Param("userId") Long userId,
+            @Param("limit") int limit);
 }

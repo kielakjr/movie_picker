@@ -1,5 +1,8 @@
 package com.kielakjr.movie_picker.movie;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,8 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -22,8 +23,8 @@ public class MovieController {
     private final MovieService movieService;
 
     @GetMapping
-    public ResponseEntity<List<MovieResponse>> getAllMovies() {
-        return ResponseEntity.ok(movieService.getAllMovies());
+    public ResponseEntity<Page<MovieResponse>> getAllMovies(@PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(movieService.getAllMovies(pageable));
     }
 
     @GetMapping("/{id}")

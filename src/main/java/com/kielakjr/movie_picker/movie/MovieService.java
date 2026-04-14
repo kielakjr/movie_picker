@@ -1,8 +1,8 @@
 package com.kielakjr.movie_picker.movie;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,11 +28,9 @@ public class MovieService {
         return mapToResponse(movie);
     }
 
-    public List<MovieResponse> getAllMovies() {
-        List<Movie> movies = movieRepository.findAll();
-        return movies.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<MovieResponse> getAllMovies(Pageable pageable) {
+        return movieRepository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     private MovieResponse mapToResponse(Movie movie) {
