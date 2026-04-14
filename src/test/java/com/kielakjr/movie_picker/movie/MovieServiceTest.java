@@ -6,6 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -88,26 +92,30 @@ class MovieServiceTest {
     class GetAllMovies {
 
         @Test
-        void whenRepositoryEmpty_returnsEmptyList() {
-            when(movieRepository.findAll()).thenReturn(List.of());
+        void whenRepositoryEmpty_returnsEmptyPage() {
+            Pageable pageable = PageRequest.of(0, 20);
+            when(movieRepository.findAll(pageable)).thenReturn(new PageImpl<>(List.of()));
 
-            List<MovieResponse> responses = movieService.getAllMovies();
+            Page<MovieResponse> responses = movieService.getAllMovies(pageable);
 
-            assertThat(responses).isEmpty();
+            assertThat(responses.getContent()).isEmpty();
+            assertThat(responses.getTotalElements()).isZero();
         }
 
         @Test
         void mapsEveryStoredMovieToResponse() {
-            when(movieRepository.findAll()).thenReturn(List.of(
+            Pageable pageable = PageRequest.of(0, 20);
+            List<Movie> movies = List.of(
                     Movie.builder().id(1L).title("A").description("descA").genre("Drama").build(),
                     Movie.builder().id(2L).title("B").description("descB").genre("Comedy").build()
-            ));
+            );
+            when(movieRepository.findAll(pageable)).thenReturn(new PageImpl<>(movies));
 
-            List<MovieResponse> responses = movieService.getAllMovies();
+            Page<MovieResponse> responses = movieService.getAllMovies(pageable);
 
-            assertThat(responses).hasSize(2);
-            assertThat(responses).extracting(MovieResponse::getTitle).containsExactly("A", "B");
-            assertThat(responses).extracting(MovieResponse::getGenre).containsExactly("Drama", "Comedy");
+            assertThat(responses.getContent()).hasSize(2);
+            assertThat(responses.getContent()).extracting(MovieResponse::getTitle).containsExactly("A", "B");
+            assertThat(responses.getContent()).extracting(MovieResponse::getGenre).containsExactly("Drama", "Comedy");
         }
     }
 }

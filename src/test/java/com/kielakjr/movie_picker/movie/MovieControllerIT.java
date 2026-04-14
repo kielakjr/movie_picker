@@ -109,10 +109,11 @@ class MovieControllerIT {
     class GetAllMovies {
 
         @Test
-        void whenNoMovies_returnsEmptyList() throws Exception {
+        void whenNoMovies_returnsEmptyPage() throws Exception {
             mockMvc.perform(get("/api/movies"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(0));
+                    .andExpect(jsonPath("$.content.length()").value(0))
+                    .andExpect(jsonPath("$.totalElements").value(0));
         }
 
         @Test
@@ -122,9 +123,23 @@ class MovieControllerIT {
 
             mockMvc.perform(get("/api/movies"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.length()").value(2))
-                    .andExpect(jsonPath("$[*].title",
-                            org.hamcrest.Matchers.containsInAnyOrder("A", "B")));
+                    .andExpect(jsonPath("$.content.length()").value(2))
+                    .andExpect(jsonPath("$.content[*].title",
+                            org.hamcrest.Matchers.containsInAnyOrder("A", "B")))
+                    .andExpect(jsonPath("$.totalElements").value(2));
+        }
+
+        @Test
+        void respectsPageSizeParameter() throws Exception {
+            for (int i = 0; i < 5; i++) {
+                movieRepository.save(Movie.builder().title("Movie " + i).description("d").genre("G").build());
+            }
+
+            mockMvc.perform(get("/api/movies").param("size", "2").param("page", "0"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.content.length()").value(2))
+                    .andExpect(jsonPath("$.totalElements").value(5))
+                    .andExpect(jsonPath("$.totalPages").value(3));
         }
     }
 

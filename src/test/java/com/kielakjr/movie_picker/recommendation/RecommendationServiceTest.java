@@ -57,7 +57,7 @@ class RecommendationServiceTest {
             User user = User.builder().id(1L).email("a@b.com").profileVector(null).build();
             Movie movie = Movie.builder().id(5L).title("Random").description("desc").genre("Drama").build();
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of());
+            when(ratingRepository.countByUserId(1L)).thenReturn(0L);
             when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.of(movie));
 
             MovieResponse response = recommendationService.getNextMovie(1L);
@@ -71,7 +71,7 @@ class RecommendationServiceTest {
             User user = User.builder().id(1L).email("a@b.com").profileVector(new float[384]).build();
             Movie movie = Movie.builder().id(5L).title("Random").description("desc").genre("Drama").build();
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of());
+            when(ratingRepository.countByUserId(1L)).thenReturn(0L);
             when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.of(movie));
 
             MovieResponse response = recommendationService.getNextMovie(1L);
@@ -83,7 +83,7 @@ class RecommendationServiceTest {
         void whenNoMoviesAvailable_throws() {
             User user = User.builder().id(1L).email("a@b.com").profileVector(null).build();
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of());
+            when(ratingRepository.countByUserId(1L)).thenReturn(0L);
             when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> recommendationService.getNextMovie(1L))
@@ -185,16 +185,13 @@ class RecommendationServiceTest {
         }
 
         @Test
-        void whenNoProfileVector_returnsFirstFiveUnratedMovies() {
+        void whenNoProfileVector_returnsUnratedMovies() {
             User user = User.builder().id(1L).email("a@b.com").profileVector(null).build();
-            Movie ratedMovie = Movie.builder().id(1L).title("Rated").description("d").genre("G").build();
             Movie unrated1 = Movie.builder().id(2L).title("U1").description("d").genre("G").build();
             Movie unrated2 = Movie.builder().id(3L).title("U2").description("d").genre("G").build();
 
-            Rating rating = Rating.builder().id(1L).movie(ratedMovie).user(user).rating(5).build();
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(rating));
-            when(movieRepository.findAll()).thenReturn(List.of(ratedMovie, unrated1, unrated2));
+            when(movieRepository.findUnratedMovies(1L, 5)).thenReturn(List.of(unrated1, unrated2));
 
             List<MovieResponse> results = recommendationService.getRecommendations(1L);
 
@@ -209,7 +206,6 @@ class RecommendationServiceTest {
             Movie similar = Movie.builder().id(2L).title("Similar").description("d").genre("G").build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of());
             when(movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(eq(1L), eq(profileVector), eq(5)))
                     .thenReturn(List.of(similar));
 
