@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Movie, User } from '../types';
+import type { Movie, User, Page } from '../types';
 import { api } from '../api';
 import { MovieCard } from './MovieCard';
 import { RatingModal } from './RatingModal';
@@ -9,7 +9,8 @@ interface Props {
 }
 
 export function MovieList({ user }: Props) {
-  const [movies, setMovies] = useState<Movie[]>([]);
+  const [page, setPage] = useState<Page<Movie> | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [ratingMovie, setRatingMovie] = useState<Movie | null>(null);
@@ -17,11 +18,11 @@ export function MovieList({ user }: Props) {
   useEffect(() => {
     setLoading(true);
     api
-      .getMovies()
-      .then(setMovies)
+      .getMovies(currentPage)
+      .then(setPage)
       .catch(() => setError('Failed to load movies'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [currentPage]);
 
   async function handleRate(rating: number) {
     if (!user || !ratingMovie) return;
@@ -35,11 +36,12 @@ export function MovieList({ user }: Props) {
 
   if (loading) return <p className="loading">Loading movies...</p>;
   if (error) return <p className="error">{error}</p>;
+  if (!page) return null;
 
   return (
     <>
       <div className="movie-grid">
-        {movies.map((movie) => (
+        {page.content.map((movie) => (
           <MovieCard
             key={movie.id}
             movie={movie}
@@ -47,6 +49,25 @@ export function MovieList({ user }: Props) {
           />
         ))}
       </div>
+      {page.totalPages > 1 && (
+        <div className="pagination">
+          <button
+            disabled={page.first}
+            onClick={() => setCurrentPage((p) => p - 1)}
+          >
+            Previous
+          </button>
+          <span>
+            Page {page.number + 1} of {page.totalPages}
+          </span>
+          <button
+            disabled={page.last}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
       {ratingMovie && (
         <RatingModal
           movieTitle={ratingMovie.title}
