@@ -1,5 +1,6 @@
 package com.kielakjr.movie_picker.recommendation;
 
+import com.kielakjr.movie_picker.movie.DbscanClusterer;
 import com.kielakjr.movie_picker.movie.Movie;
 import com.kielakjr.movie_picker.movie.MovieRepository;
 import com.kielakjr.movie_picker.movie.MovieResponse;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -36,6 +38,9 @@ class RecommendationServiceTest {
 
     @Mock
     private RatingRepository ratingRepository;
+
+    @Spy
+    private DbscanClusterer dbscanClusterer = new DbscanClusterer();
 
     @InjectMocks
     private RecommendationService recommendationService;
@@ -147,7 +152,7 @@ class RecommendationServiceTest {
             recommendationService.updateUserProfile(1L);
 
             assertThat(user.getProfileVector()).isNotNull();
-            assertThat(user.getProfileVector()[0]).isCloseTo(38f / 18f, org.assertj.core.data.Offset.offset(0.001f));
+            assertThat(user.getProfileVector()[0]).isCloseTo(2.0f, org.assertj.core.data.Offset.offset(0.001f));
             verify(userRepository).save(user);
         }
 
@@ -168,7 +173,7 @@ class RecommendationServiceTest {
 
             recommendationService.updateUserProfile(1L);
 
-            assertThat(user.getProfileVector()[0]).isCloseTo(18f / 17f, org.assertj.core.data.Offset.offset(0.001f));
+            assertThat(user.getProfileVector()[0]).isCloseTo(2.0f, org.assertj.core.data.Offset.offset(0.001f));
         }
     }
 

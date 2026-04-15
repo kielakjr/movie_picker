@@ -10,15 +10,18 @@ import com.kielakjr.movie_picker.user.User;
 import com.kielakjr.movie_picker.movie.MovieRepository;
 import com.kielakjr.movie_picker.movie.Movie;
 import com.kielakjr.movie_picker.movie.MovieResponse;
+import com.kielakjr.movie_picker.movie.DbscanClusterer;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class RecommendationService {
     private final MovieRepository movieRepository;
-    private final UserRepository userRepository;
     private final RatingRepository ratingRepository;
+    private final UserRepository userRepository;
+    private final DbscanClusterer dbscanClusterer;
 
     private static final double EXPLORATION_RATE = 0.2;
 
@@ -41,7 +44,6 @@ public class RecommendationService {
     }
 
     public void updateUserProfile(Long userId) {
-
         List<Rating> ratings = ratingRepository.findByUserId(userId);
 
         List<Rating> goodRatings = ratings.stream()
@@ -50,27 +52,17 @@ public class RecommendationService {
 
         if (goodRatings.isEmpty()) return;
 
-        float[] profileVector = new float[384];
+        List<float[]> vectors = goodRatings.stream()
+                .map(r -> r.getMovie().getEmbedding())
+                .filter(Objects::nonNull)
+                .toList();
 
-        for (Rating rating : goodRatings) {
-            float[] embedding = rating.getMovie().getEmbedding();
-            if (embedding == null) continue;
-            for (int i = 0; i < 384; i++) {
-                profileVector[i] += embedding[i] * rating.getRating();
-            }
-        }
-
-        float totalWeight = (float) goodRatings.stream()
-                .mapToInt(Rating::getRating)
-                .sum();
-
-        for (int i = 0; i < 384; i++) {
-            profileVector[i] /= totalWeight;
-        }
+        List<float[]> centroids = dbscanClusterer.findClusterCentroids(vectors);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        user.setProfileVector(profileVector);
+
+        user.setProfileVector(centroids.get(0));
         userRepository.save(user);
     }
 
