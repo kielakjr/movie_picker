@@ -97,6 +97,58 @@ class RecommendationServiceTest {
                     .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("No movies available");
         }
+
+        @Test
+        void whenExplorationFires_returnsRandomMovie() {
+            float[] profile = new float[384];
+            User user = User.builder().id(1L).email("a@b.com").profileVector(profile).build();
+            Movie random = Movie.builder().id(10L).title("Random").description("d").genre("G").build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(ratingRepository.countByUserId(1L)).thenReturn(5L);
+            when(explorationRandom.getAsDouble()).thenReturn(0.1);
+            when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.of(random));
+
+            MovieResponse response = recommendationService.getNextMovie(1L);
+
+            assertThat(response.getTitle()).isEqualTo("Random");
+            verify(movieRepository, never()).findTopUnratedMovieByEmbeddingSimilarity(any(), any());
+        }
+
+        @Test
+        void whenExplorationSkipped_returnsSimilarityMatch() {
+            float[] profile = new float[384];
+            User user = User.builder().id(1L).email("a@b.com").profileVector(profile).build();
+            Movie similar = Movie.builder().id(20L).title("Similar").description("d").genre("G").build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(ratingRepository.countByUserId(1L)).thenReturn(5L);
+            when(explorationRandom.getAsDouble()).thenReturn(1.0);
+            when(movieRepository.findTopUnratedMovieByEmbeddingSimilarity(1L, profile))
+                    .thenReturn(Optional.of(similar));
+
+            MovieResponse response = recommendationService.getNextMovie(1L);
+
+            assertThat(response.getTitle()).isEqualTo("Similar");
+        }
+
+        @Test
+        void whenExplorationSkipped_andNoSimilarityMatch_fallsBackToRandom() {
+            float[] profile = new float[384];
+            User user = User.builder().id(1L).email("a@b.com").profileVector(profile).build();
+            Movie fallback = Movie.builder().id(30L).title("Fallback").description("d").genre("G").build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(ratingRepository.countByUserId(1L)).thenReturn(5L);
+            when(explorationRandom.getAsDouble()).thenReturn(1.0);
+            when(movieRepository.findTopUnratedMovieByEmbeddingSimilarity(1L, profile))
+                    .thenReturn(Optional.empty());
+            when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.of(fallback));
+
+            MovieResponse response = recommendationService.getNextMovie(1L);
+
+            assertThat(response.getTitle()).isEqualTo("Fallback");
+        }
     }
 
     @Nested
@@ -153,6 +205,20 @@ class RecommendationServiceTest {
             assertThat(user.getProfileVector()).isNotNull();
             assertThat(user.getProfileVector()[0]).isCloseTo(2.0f, org.assertj.core.data.Offset.offset(0.001f));
             verify(userRepository).save(user);
+        }
+
+        @Test
+        void whenAllGoodRatedMoviesHaveNullEmbedding_doesNotUpdateProfile() {
+            Movie movieWithoutEmbedding = Movie.builder().id(1L).title("A").embedding(null).build();
+            Rating goodRating = Rating.builder().id(1L).rating(9)
+                    .movie(movieWithoutEmbedding)
+                    .user(User.builder().id(1L).build())
+                    .build();
+            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(goodRating));
+
+            recommendationService.updateUserProfile(1L);
+
+            verify(userRepository, never()).save(any());
         }
 
         @Test
