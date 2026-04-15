@@ -14,6 +14,7 @@ import com.kielakjr.movie_picker.movie.DbscanClusterer;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.DoubleSupplier;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class RecommendationService {
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
     private final DbscanClusterer dbscanClusterer;
+    private final DoubleSupplier explorationRandom;
 
     private static final double EXPLORATION_RATE = 0.2;
 
@@ -29,13 +31,17 @@ public class RecommendationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        boolean hasRatings = ratingRepository.countByUserId(userId) > 0;
-
-        if (user.getProfileVector() == null || !hasRatings) {
+        if (user.getProfileVector() == null) {
             return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
         }
 
-        if (Math.random() < EXPLORATION_RATE) {
+        boolean hasRatings = ratingRepository.countByUserId(userId) > 0;
+
+        if (!hasRatings) {
+            return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
+        }
+
+        if (explorationRandom.getAsDouble() < EXPLORATION_RATE) {
             return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
         }
 
@@ -56,6 +62,8 @@ public class RecommendationService {
                 .map(r -> r.getMovie().getEmbedding())
                 .filter(Objects::nonNull)
                 .toList();
+
+        if (vectors.isEmpty()) return;
 
         List<float[]> centroids = dbscanClusterer.findClusterCentroids(vectors);
 
@@ -83,7 +91,7 @@ public class RecommendationService {
                 .toList();
     }
 
-    public MovieResponse toMovieResponse(Movie movie) {
+    private MovieResponse toMovieResponse(Movie movie) {
         return MovieResponse.builder()
                 .id(movie.getId())
                 .title(movie.getTitle())

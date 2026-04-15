@@ -66,15 +66,16 @@ public class DbscanClusterer {
     }
 
     private List<float[]> computeCentroids(List<float[]> vectors, int[] labels, int clusterCount) {
+        int dim = vectors.get(0).length;
         List<float[]> centroids = new ArrayList<>();
 
         for (int c = 0; c < clusterCount; c++) {
-            float[] centroid = new float[384];
+            float[] centroid = new float[dim];
             int count = 0;
 
             for (int i = 0; i < vectors.size(); i++) {
                 if (labels[i] == c) {
-                    for (int d = 0; d < 384; d++) {
+                    for (int d = 0; d < dim; d++) {
                         centroid[d] += vectors.get(i)[d];
                     }
                     count++;
@@ -82,7 +83,7 @@ public class DbscanClusterer {
             }
 
             if (count > 0) {
-                for (int d = 0; d < 384; d++) {
+                for (int d = 0; d < dim; d++) {
                     centroid[d] /= count;
                 }
                 centroids.add(centroid);
@@ -97,13 +98,14 @@ public class DbscanClusterer {
     }
 
     private float[] computeGlobalMean(List<float[]> vectors) {
-        float[] mean = new float[384];
+        int dim = vectors.get(0).length;
+        float[] mean = new float[dim];
         for (float[] v : vectors) {
-            for (int d = 0; d < 384; d++) {
+            for (int d = 0; d < dim; d++) {
                 mean[d] += v[d];
             }
         }
-        for (int d = 0; d < 384; d++) {
+        for (int d = 0; d < dim; d++) {
             mean[d] /= vectors.size();
         }
         return mean;

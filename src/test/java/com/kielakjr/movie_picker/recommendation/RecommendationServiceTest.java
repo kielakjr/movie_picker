@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.DoubleSupplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,6 +39,9 @@ class RecommendationServiceTest {
 
     @Mock
     private RatingRepository ratingRepository;
+
+    @Mock
+    private DoubleSupplier explorationRandom;
 
     @Spy
     private DbscanClusterer dbscanClusterer = new DbscanClusterer();
@@ -62,7 +66,6 @@ class RecommendationServiceTest {
             User user = User.builder().id(1L).email("a@b.com").profileVector(null).build();
             Movie movie = Movie.builder().id(5L).title("Random").description("desc").genre("Drama").build();
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.countByUserId(1L)).thenReturn(0L);
             when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.of(movie));
 
             MovieResponse response = recommendationService.getNextMovie(1L);
@@ -88,7 +91,6 @@ class RecommendationServiceTest {
         void whenNoMoviesAvailable_throws() {
             User user = User.builder().id(1L).email("a@b.com").profileVector(null).build();
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(ratingRepository.countByUserId(1L)).thenReturn(0L);
             when(movieRepository.findRandomUnratedMovie(1L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> recommendationService.getNextMovie(1L))
@@ -102,9 +104,6 @@ class RecommendationServiceTest {
 
         @Test
         void whenUserNotFound_throws() {
-            when(ratingRepository.findByUserId(99L)).thenReturn(List.of());
-            when(userRepository.findById(99L)).thenReturn(Optional.empty());
-
             Movie movie = Movie.builder().id(1L).title("A").embedding(new float[384]).build();
             Rating goodRating = Rating.builder().id(1L).rating(8)
                     .movie(movie)
@@ -133,7 +132,7 @@ class RecommendationServiceTest {
         }
 
         @Test
-        void computesWeightedAverageFromGoodRatings() {
+        void profileVectorIsSetToCentroidOfGoodRatedMovieEmbeddings() {
             float[] embedding1 = new float[384];
             embedding1[0] = 1.0f;
             float[] embedding2 = new float[384];
