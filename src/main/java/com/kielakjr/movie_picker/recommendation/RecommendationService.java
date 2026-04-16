@@ -26,27 +26,26 @@ public class RecommendationService {
     private final DoubleSupplier explorationRandom;
 
     private static final double EXPLORATION_RATE = 0.2;
+    private static final int DEFAULT_RECOMMENDATION_COUNT = 5;
 
     public MovieResponse getNextMovie(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        if (user.getProfileVector() == null) {
-            return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
-        }
+        if (user.getProfileVector() == null) return randomOrThrow(userId);
 
-        boolean hasRatings = ratingRepository.countByUserId(userId) > 0;
+        if (ratingRepository.countByUserId(userId) == 0) return randomOrThrow(userId);
 
-        if (!hasRatings) {
-            return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
-        }
-
-        if (explorationRandom.getAsDouble() < EXPLORATION_RATE) {
-            return toMovieResponse(movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available")));
-        }
+        if (explorationRandom.getAsDouble() < EXPLORATION_RATE) return randomOrThrow(userId);
 
         return toMovieResponse(movieRepository.findTopUnratedMovieByEmbeddingSimilarity(userId, user.getProfileVector())
-                .orElseGet(() -> movieRepository.findRandomUnratedMovie(userId).orElseThrow(() -> new IllegalStateException("No movies available"))));
+                .orElseGet(() -> movieRepository.findRandomUnratedMovie(userId)
+                        .orElseThrow(() -> new IllegalStateException("No movies available"))));
+    }
+
+    private MovieResponse randomOrThrow(Long userId) {
+        return toMovieResponse(movieRepository.findRandomUnratedMovie(userId)
+                .orElseThrow(() -> new IllegalStateException("No movies available")));
     }
 
     public void updateUserProfile(Long userId) {
@@ -79,13 +78,13 @@ public class RecommendationService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (user.getProfileVector() == null) {
-            return movieRepository.findUnratedMovies(userId, 5)
+            return movieRepository.findUnratedMovies(userId, DEFAULT_RECOMMENDATION_COUNT)
                     .stream()
                     .map(this::toMovieResponse)
                     .toList();
         }
 
-        return movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(userId, user.getProfileVector(), 5)
+        return movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(userId, user.getProfileVector(), DEFAULT_RECOMMENDATION_COUNT)
                 .stream()
                 .map(this::toMovieResponse)
                 .toList();

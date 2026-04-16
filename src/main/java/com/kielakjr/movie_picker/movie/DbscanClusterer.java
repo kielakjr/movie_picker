@@ -9,23 +9,25 @@ public class DbscanClusterer {
 
     private static final float EPSILON = 0.3f;
     private static final int MIN_POINTS = 2;
+    private static final int UNVISITED = -1;
+    private static final int NOISE = -2;
 
     public List<float[]> findClusterCentroids(List<float[]> vectors) {
         if (vectors.isEmpty()) return List.of();
 
         int n = vectors.size();
         int[] labels = new int[n];
-        Arrays.fill(labels, -1);
+        Arrays.fill(labels, UNVISITED);
 
         int clusterId = 0;
 
         for (int i = 0; i < n; i++) {
-            if (labels[i] != -1) continue;
+            if (labels[i] != UNVISITED) continue;
 
             List<Integer> neighbors = getNeighbors(vectors, i, EPSILON);
 
             if (neighbors.size() < MIN_POINTS) {
-                labels[i] = -2;
+                labels[i] = NOISE;
                 continue;
             }
 
@@ -35,10 +37,10 @@ public class DbscanClusterer {
             while (!queue.isEmpty()) {
                 int j = queue.poll();
 
-                if (labels[j] == -2) {
+                if (labels[j] == NOISE) {
                     labels[j] = clusterId;
                 }
-                if (labels[j] != -1) continue;
+                if (labels[j] != UNVISITED) continue;
 
                 labels[j] = clusterId;
                 List<Integer> jNeighbors = getNeighbors(vectors, j, EPSILON);
