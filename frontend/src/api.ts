@@ -34,8 +34,8 @@ export const api = {
     request<Rating[]>(`/api/ratings/user/${userId}`),
 
   getRecommendations: (userId: number) =>
-    request<Movie[]>(`/recommendations/${userId}`),
+    request<Movie[]>(`/api/recommendations/${userId}`),
 
   getNextMovie: (userId: number) =>
-    request<Movie>(`/recommendations/movies/next/${userId}`),
+    request<Movie>(`/api/recommendations/movies/next/${userId}`),
 };

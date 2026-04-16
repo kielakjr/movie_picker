@@ -43,7 +43,7 @@ class RecommendationControllerIT {
 
         @Test
         void whenUserNotFound_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/recommendations/movies/next/{userId}", 999))
+            mockMvc.perform(get("/api/recommendations/movies/next/{userId}", 999))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").exists());
         }
@@ -53,7 +53,7 @@ class RecommendationControllerIT {
             User user = userRepository.save(User.builder().email("test@test.com").build());
             movieRepository.save(Movie.builder().title("Inception").description("Dreams").genre("Sci-Fi").build());
 
-            mockMvc.perform(get("/recommendations/movies/next/{userId}", user.getId()))
+            mockMvc.perform(get("/api/recommendations/movies/next/{userId}", user.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.title").value("Inception"));
         }
@@ -64,7 +64,7 @@ class RecommendationControllerIT {
             Movie movie = movieRepository.save(Movie.builder().title("Inception").description("Dreams").genre("Sci-Fi").build());
             ratingRepository.save(Rating.builder().user(user).movie(movie).rating(8).build());
 
-            mockMvc.perform(get("/recommendations/movies/next/{userId}", user.getId()))
+            mockMvc.perform(get("/api/recommendations/movies/next/{userId}", user.getId()))
                     .andExpect(status().isInternalServerError());
         }
     }
@@ -74,7 +74,7 @@ class RecommendationControllerIT {
 
         @Test
         void whenUserNotFound_returnsBadRequest() throws Exception {
-            mockMvc.perform(get("/recommendations/{userId}", 999))
+            mockMvc.perform(get("/api/recommendations/{userId}", 999))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").exists());
         }
@@ -85,7 +85,7 @@ class RecommendationControllerIT {
             movieRepository.save(Movie.builder().title("A").description("d").genre("G").build());
             movieRepository.save(Movie.builder().title("B").description("d").genre("G").build());
 
-            mockMvc.perform(get("/recommendations/{userId}", user.getId()))
+            mockMvc.perform(get("/api/recommendations/{userId}", user.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(2));
         }
@@ -97,7 +97,7 @@ class RecommendationControllerIT {
             movieRepository.save(Movie.builder().title("Unrated").description("d").genre("G").build());
             ratingRepository.save(Rating.builder().user(user).movie(rated).rating(5).build());
 
-            mockMvc.perform(get("/recommendations/{userId}", user.getId()))
+            mockMvc.perform(get("/api/recommendations/{userId}", user.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(1))
                     .andExpect(jsonPath("$[0].title").value("Unrated"));
@@ -110,7 +110,7 @@ class RecommendationControllerIT {
                 movieRepository.save(Movie.builder().title("Movie " + i).description("d").genre("G").build());
             }
 
-            mockMvc.perform(get("/recommendations/{userId}", user.getId()))
+            mockMvc.perform(get("/api/recommendations/{userId}", user.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(5));
         }

@@ -10,7 +10,7 @@ import com.kielakjr.movie_picker.movie.MovieResponse;
 import java.util.List;
 
 @RestController
-@RequestMapping("/recommendations")
+@RequestMapping("/api/recommendations")
 @RequiredArgsConstructor
 public class RecommendationController {
 
