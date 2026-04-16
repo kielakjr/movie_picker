@@ -1,6 +1,7 @@
 package com.kielakjr.movie_picker.rating;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.kielakjr.movie_picker.user.User;
 import com.kielakjr.movie_picker.user.UserRepository;
@@ -18,6 +19,7 @@ public class RatingService {
     private final UserRepository userRepository;
     private final RecommendationService recommendationService;
 
+    @Transactional
     public RatingResponse createRating(RatingRequest request) {
         Movie movie = movieRepository.findById(request.getMovieId())
                 .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
@@ -28,8 +30,9 @@ public class RatingService {
                 .user(user)
                 .rating(request.getRating())
                 .build();
+        RatingResponse response = mapToResponse(ratingRepository.save(rating));
         recommendationService.updateUserProfile(request.getUserId());
-        return mapToResponse(ratingRepository.save(rating));
+        return response;
     }
 
     public List<RatingResponse> getRatingsByUserId(Long userId) {
