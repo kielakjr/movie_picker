@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +37,8 @@ public class TmdbSeederService {
     }
 
     public int seedMovies(int pages) {
+        Map<Long, String> genreById = fetchGenreMap();
+
         int count = 0;
         for (int page = 1; page <= pages; page++) {
             TmdbPageResponse response = restClient.get()
@@ -49,15 +52,9 @@ public class TmdbSeederService {
                 if (movieRepository.existsByTitle(tmdbMovie.title())) continue;
                 if (tmdbMovie.overview() == null || tmdbMovie.overview().isBlank()) continue;
 
-                TmdbMovieDetails details = restClient.get()
-                        .uri("/movie/" + tmdbMovie.id() + "?language=en-US")
-                        .retrieve()
-                        .body(TmdbMovieDetails.class);
-
-                if (details == null) continue;
-
-                String genres = details.genres().stream()
-                        .map(TmdbGenre::name)
+                String genres = tmdbMovie.genreIds().stream()
+                        .map(id -> genreById.getOrDefault(id, ""))
+                        .filter(name -> !name.isBlank())
                         .collect(Collectors.joining(", "));
 
                 String posterUrl = tmdbMovie.posterPath() != null
@@ -83,16 +80,27 @@ public class TmdbSeederService {
         return count;
     }
 
+    private Map<Long, String> fetchGenreMap() {
+        TmdbGenreListResponse response = restClient.get()
+                .uri("/genre/movie/list?language=en-US")
+                .retrieve()
+                .body(TmdbGenreListResponse.class);
+        if (response == null || response.genres() == null) return Map.of();
+        return response.genres().stream()
+                .collect(Collectors.toMap(TmdbGenre::id, TmdbGenre::name));
+    }
+
     record TmdbPageResponse(List<TmdbMovie> results) {}
 
     record TmdbMovie(
             Long id,
             String title,
             String overview,
-            @JsonProperty("poster_path") String posterPath
+            @JsonProperty("poster_path") String posterPath,
+            @JsonProperty("genre_ids") List<Long> genreIds
     ) {}
 
-    record TmdbMovieDetails(List<TmdbGenre> genres) {}
+    record TmdbGenreListResponse(List<TmdbGenre> genres) {}
 
-    record TmdbGenre(String name) {}
+    record TmdbGenre(Long id, String name) {}
 }
