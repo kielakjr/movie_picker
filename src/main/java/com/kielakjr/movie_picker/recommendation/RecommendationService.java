@@ -143,6 +143,7 @@ public class RecommendationService {
                 .title(movie.getTitle())
                 .description(movie.getDescription())
                 .genre(movie.getGenre())
+                .posterUrl(movie.getPosterUrl())
                 .build();
     }
 }

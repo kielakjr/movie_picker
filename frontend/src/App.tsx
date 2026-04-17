@@ -3,7 +3,6 @@ import type { User } from './types';
 import { UserSelect } from './components/UserSelect';
 import { MovieList } from './components/MovieList';
 import { Recommendations } from './components/Recommendations';
-import './App.css';
 
 type Tab = 'movies' | 'recommendations';
 

@@ -34,14 +34,23 @@ export function Recommendations({ user }: Props) {
   return (
     <div>
       {nextMovie && (
-        <div className="next-movie-section">
-          <h3>Up Next</h3>
-          <MovieCard movie={nextMovie} />
+        <div className="featured-card">
+          {nextMovie.posterUrl ? (
+            <img src={nextMovie.posterUrl} alt={nextMovie.title} className="featured-poster" />
+          ) : (
+            <div className="featured-poster placeholder">No Poster</div>
+          )}
+          <div className="featured-info">
+            <span className="featured-label">Up Next</span>
+            <h2>{nextMovie.title}</h2>
+            <span className="genre-badge">{nextMovie.genre}</span>
+            <p className="movie-description">{nextMovie.description}</p>
+          </div>
         </div>
       )}
       {movies.length > 0 ? (
         <>
-          <h3>Recommended for You</h3>
+          <h3 className="section-heading">Recommended for You</h3>
           <div className="movie-grid">
             {movies.map((movie) => (
               <MovieCard key={movie.id} movie={movie} />
