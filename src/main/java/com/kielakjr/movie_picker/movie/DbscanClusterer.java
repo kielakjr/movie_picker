@@ -7,8 +7,8 @@ import java.util.*;
 @Component
 public class DbscanClusterer {
 
-    private static final float EPSILON = 0.3f;
-    private static final int MIN_POINTS = 2;
+    private static final float EPSILON = 0.65f;
+    private static final int MIN_POINTS = 0;
     private static final int UNVISITED = -1;
     private static final int NOISE = -2;
 
@@ -92,25 +92,7 @@ public class DbscanClusterer {
             }
         }
 
-        if (centroids.isEmpty()) {
-            centroids.add(computeGlobalMean(vectors));
-        }
-
         return centroids;
-    }
-
-    private float[] computeGlobalMean(List<float[]> vectors) {
-        int dim = vectors.get(0).length;
-        float[] mean = new float[dim];
-        for (float[] v : vectors) {
-            for (int d = 0; d < dim; d++) {
-                mean[d] += v[d];
-            }
-        }
-        for (int d = 0; d < dim; d++) {
-            mean[d] /= vectors.size();
-        }
-        return mean;
     }
 
     private float cosineDistance(float[] a, float[] b) {

@@ -178,15 +178,18 @@ class RecommendationServiceTest {
         @Test
         void centroidIsComputedAndPersistedForGoodRatings() {
             float[] embedding1 = new float[384]; embedding1[0] = 1.0f;
-            float[] embedding2 = new float[384]; embedding2[0] = 3.0f;
+            float[] embedding2 = new float[384]; embedding2[0] = 2.0f;
+            float[] embedding3 = new float[384]; embedding3[0] = 3.0f;
 
             Movie movie1 = Movie.builder().id(1L).title("A").embedding(embedding1).build();
             Movie movie2 = Movie.builder().id(2L).title("B").embedding(embedding2).build();
+            Movie movie3 = Movie.builder().id(3L).title("C").embedding(embedding3).build();
             Rating rating1 = Rating.builder().id(1L).rating(8).movie(movie1).user(User.builder().id(1L).build()).build();
             Rating rating2 = Rating.builder().id(2L).rating(10).movie(movie2).user(User.builder().id(1L).build()).build();
+            Rating rating3 = Rating.builder().id(3L).rating(9).movie(movie3).user(User.builder().id(1L).build()).build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(rating1, rating2));
+            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(rating1, rating2, rating3));
 
             List<UserProfileCluster> saved = new ArrayList<>();
             when(userProfileClusterRepository.saveAll(any())).thenAnswer(inv -> {
@@ -220,13 +223,17 @@ class RecommendationServiceTest {
         void skipsRatingsWithNullEmbeddingWhenComputingCentroid() {
             float[] embedding = new float[384]; embedding[0] = 2.0f;
 
-            Movie movieWithEmbedding = Movie.builder().id(1L).title("A").embedding(embedding).build();
-            Movie movieWithoutEmbedding = Movie.builder().id(2L).title("B").embedding(null).build();
-            Rating rating1 = Rating.builder().id(1L).rating(9).movie(movieWithEmbedding).user(User.builder().id(1L).build()).build();
-            Rating rating2 = Rating.builder().id(2L).rating(8).movie(movieWithoutEmbedding).user(User.builder().id(1L).build()).build();
+            Movie movieWithEmbedding1 = Movie.builder().id(1L).title("A").embedding(embedding).build();
+            Movie movieWithEmbedding2 = Movie.builder().id(2L).title("B").embedding(embedding).build();
+            Movie movieWithEmbedding3 = Movie.builder().id(3L).title("C").embedding(embedding).build();
+            Movie movieWithoutEmbedding = Movie.builder().id(4L).title("D").embedding(null).build();
+            Rating rating1 = Rating.builder().id(1L).rating(9).movie(movieWithEmbedding1).user(User.builder().id(1L).build()).build();
+            Rating rating2 = Rating.builder().id(2L).rating(8).movie(movieWithEmbedding2).user(User.builder().id(1L).build()).build();
+            Rating rating3 = Rating.builder().id(3L).rating(9).movie(movieWithEmbedding3).user(User.builder().id(1L).build()).build();
+            Rating rating4 = Rating.builder().id(4L).rating(8).movie(movieWithoutEmbedding).user(User.builder().id(1L).build()).build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
-            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(rating1, rating2));
+            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(rating1, rating2, rating3, rating4));
 
             List<UserProfileCluster> saved = new ArrayList<>();
             when(userProfileClusterRepository.saveAll(any())).thenAnswer(inv -> {

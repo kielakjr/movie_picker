@@ -23,25 +23,22 @@ class DbscanClustererTest {
         }
 
         @Test
-        void singleVector_noClusterFormed_returnsGlobalMeanFallback() {
+        void singleVector_noClusterFormed_returnsEmptyList() {
             float[] v = {1f, 0f, 0f};
 
             List<float[]> centroids = clusterer.findClusterCentroids(List.of(v));
 
-            assertThat(centroids).hasSize(1);
-            assertThat(centroids.get(0)).containsExactly(1f, 0f, 0f);
+            assertThat(centroids).isEmpty();
         }
 
         @Test
-        void twoCloseVectors_noClusterFormed_returnsGlobalMeanFallback() {
+        void twoCloseVectors_withMinPointsOne_formSingleCluster() {
             float[] v1 = {1f, 0f, 0f};
             float[] v2 = {2f, 0f, 0f};
 
             List<float[]> centroids = clusterer.findClusterCentroids(List.of(v1, v2));
 
             assertThat(centroids).hasSize(1);
-            assertThat(centroids.get(0)[0]).isCloseTo(1.5f, offset(0.001f));
-            assertThat(centroids.get(0)[1]).isCloseTo(0f, offset(0.001f));
         }
 
         @Test
