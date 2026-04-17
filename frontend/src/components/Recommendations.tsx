@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import type { Movie, User } from '../types';
+import type { RecommendedMovie, TasteProfile, Movie, User } from '../types';
 import { api } from '../api';
 import { MovieCard } from './MovieCard';
 import { RatingModal } from './RatingModal';
 
 interface Props {
   user: User;
+}
+
+const CLUSTER_COLORS = ['cluster-0', 'cluster-1', 'cluster-2', 'cluster-3'];
+
+function clusterColorClass(index: number) {
+  return CLUSTER_COLORS[index % CLUSTER_COLORS.length];
 }
 
 function SkeletonFeatured() {
@@ -26,8 +32,9 @@ function SkeletonFeatured() {
 export function Recommendations({ user }: Props) {
   const [data, setData] = useState<{
     userId: number;
-    movies: Movie[];
+    movies: RecommendedMovie[];
     nextMovie: Movie | null;
+    tasteProfile: TasteProfile[];
   } | null>(null);
   const [error, setError] = useState('');
   const [ratingMovie, setRatingMovie] = useState<Movie | null>(null);
@@ -37,16 +44,18 @@ export function Recommendations({ user }: Props) {
   const loading = data?.userId !== user.id;
   const movies = loading ? [] : (data?.movies ?? []);
   const nextMovie = loading ? null : (data?.nextMovie ?? null);
+  const tasteProfile = loading ? [] : (data?.tasteProfile ?? []);
 
   useEffect(() => {
     let active = true;
     Promise.all([
-      api.getRecommendations(user.id).catch(() => [] as Movie[]),
+      api.getRecommendations(user.id).catch(() => [] as RecommendedMovie[]),
       api.getNextMovie(user.id).catch(() => null),
+      api.getTasteProfile(user.id).catch(() => [] as TasteProfile[]),
     ])
-      .then(([recs, next]) => {
+      .then(([recs, next, profile]) => {
         if (active) {
-          setData({ userId: user.id, movies: recs, nextMovie: next });
+          setData({ userId: user.id, movies: recs, nextMovie: next, tasteProfile: profile });
           setError('');
         }
       })
@@ -70,6 +79,14 @@ export function Recommendations({ user }: Props) {
     } catch {
       setError('Failed to submit rating');
     }
+  }
+
+  function getClusterLabel(movie: RecommendedMovie): string | undefined {
+    if (movie.clusterIndex < 0) return undefined;
+    const profile = tasteProfile.find((p) => p.clusterIndex === movie.clusterIndex);
+    const label = `Taste ${movie.clusterIndex + 1}`;
+    if (!profile || profile.genres.length === 0) return label;
+    return `${label} · ${profile.genres.slice(0, 2).join(' / ')}`;
   }
 
   if (error) return <p className="error">{error}</p>;
@@ -104,6 +121,19 @@ export function Recommendations({ user }: Props) {
         </div>
       ) : null}
 
+      {!loading && tasteProfile.length > 0 && (
+        <div className="taste-profile">
+          <span className="taste-profile-label">Your taste:</span>
+          {tasteProfile.map((p) => (
+            <span key={p.clusterIndex} className={`cluster-chip ${clusterColorClass(p.clusterIndex)}`}>
+              Taste {p.clusterIndex + 1}
+              {p.genres.length > 0 && ` · ${p.genres.slice(0, 2).join(' / ')}`}
+              <span className="cluster-chip-count">{p.movieCount}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="movie-grid">
           {Array.from({ length: 5 }, (_, i) => (
@@ -126,6 +156,8 @@ export function Recommendations({ user }: Props) {
                 movie={movie}
                 onRate={() => setRatingMovie(movie)}
                 userRating={ratedMovies.get(movie.id)}
+                clusterLabel={getClusterLabel(movie)}
+                clusterIndex={movie.clusterIndex >= 0 ? movie.clusterIndex : undefined}
               />
             ))}
           </div>

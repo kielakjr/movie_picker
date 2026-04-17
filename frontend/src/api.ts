@@ -1,4 +1,4 @@
-import type { Movie, User, Rating, Page } from './types';
+import type { Movie, RecommendedMovie, TasteProfile, User, Rating, Page } from './types';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -34,8 +34,11 @@ export const api = {
     request<Rating[]>(`/api/ratings/user/${userId}`),
 
   getRecommendations: (userId: number) =>
-    request<Movie[]>(`/api/recommendations/${userId}`),
+    request<RecommendedMovie[]>(`/api/recommendations/${userId}`),
 
   getNextMovie: (userId: number) =>
     request<Movie>(`/api/recommendations/movies/next/${userId}`),
+
+  getTasteProfile: (userId: number) =>
+    request<TasteProfile[]>(`/api/recommendations/profile/${userId}`),
 };

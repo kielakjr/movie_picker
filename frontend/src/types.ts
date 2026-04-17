@@ -6,6 +6,16 @@ export interface Movie {
   posterUrl: string;
 }
 
+export interface RecommendedMovie extends Movie {
+  clusterIndex: number;
+}
+
+export interface TasteProfile {
+  clusterIndex: number;
+  genres: string[];
+  movieCount: number;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -17,6 +27,9 @@ export interface Rating {
   userId: number;
   rating: number;
   createdAt: string;
+  movieTitle: string;
+  posterUrl: string;
+  genre: string;
 }
 
 export interface Page<T> {

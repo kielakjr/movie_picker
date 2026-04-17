@@ -4,9 +4,11 @@ interface Props {
   movie: Movie;
   onRate?: (movieId: number) => void;
   userRating?: number;
+  clusterLabel?: string;
+  clusterIndex?: number;
 }
 
-export function MovieCard({ movie, onRate, userRating }: Props) {
+export function MovieCard({ movie, onRate, userRating, clusterLabel, clusterIndex }: Props) {
   return (
     <div className="movie-card">
       <div className="movie-poster-wrapper">
@@ -22,6 +24,9 @@ export function MovieCard({ movie, onRate, userRating }: Props) {
       <div className="movie-info">
         <h3>{movie.title}</h3>
         <span className="genre-badge">{movie.genre}</span>
+        {clusterLabel !== undefined && clusterIndex !== undefined && (
+          <span className={`cluster-match cluster-${clusterIndex}`}>{clusterLabel}</span>
+        )}
         <p className="movie-description">{movie.description}</p>
         {onRate && (
           <button className="btn btn-secondary" onClick={() => onRate(movie.id)}>
