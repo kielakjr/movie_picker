@@ -17,4 +17,7 @@ public class RatingResponse {
     private Long userId;
     private Integer rating;
     private LocalDateTime createdAt;
+    private String movieTitle;
+    private String posterUrl;
+    private String genre;
 }

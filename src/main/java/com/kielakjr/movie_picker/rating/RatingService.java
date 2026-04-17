@@ -48,6 +48,9 @@ public class RatingService {
                 .userId(rating.getUser().getId())
                 .rating(rating.getRating())
                 .createdAt(rating.getCreatedAt())
+                .movieTitle(rating.getMovie().getTitle())
+                .posterUrl(rating.getMovie().getPosterUrl())
+                .genre(rating.getMovie().getGenre())
                 .build();
     }
 }

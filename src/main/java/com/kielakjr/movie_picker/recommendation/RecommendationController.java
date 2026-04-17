@@ -16,14 +16,18 @@ public class RecommendationController {
 
     private final RecommendationService recommendationService;
 
-
     @GetMapping("/movies/next/{userId}")
     public ResponseEntity<MovieResponse> getNextMovie(@PathVariable Long userId) {
         return ResponseEntity.ok(recommendationService.getNextMovie(userId));
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<MovieResponse>> getRecommendations(@PathVariable Long userId) {
+    public ResponseEntity<List<RecommendedMovieResponse>> getRecommendations(@PathVariable Long userId) {
         return ResponseEntity.ok(recommendationService.getRecommendations(userId));
+    }
+
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<List<TasteProfileResponse>> getTasteProfile(@PathVariable Long userId) {
+        return ResponseEntity.ok(recommendationService.getTasteProfile(userId));
     }
 }

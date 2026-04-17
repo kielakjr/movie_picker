@@ -295,13 +295,26 @@ class RecommendationServiceTest {
             Movie unrated2 = Movie.builder().id(3L).title("U2").description("d").genre("G").build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
-            when(userProfileClusterRepository.findByUserId(1L)).thenReturn(List.of());
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of());
             when(movieRepository.findUnratedMovies(1L, 5)).thenReturn(List.of(unrated1, unrated2));
 
-            List<MovieResponse> results = recommendationService.getRecommendations(1L);
+            List<RecommendedMovieResponse> results = recommendationService.getRecommendations(1L);
 
             assertThat(results).hasSize(2);
-            assertThat(results).extracting(MovieResponse::getTitle).containsExactly("U1", "U2");
+            assertThat(results).extracting(RecommendedMovieResponse::getTitle).containsExactly("U1", "U2");
+        }
+
+        @Test
+        void whenNoClusters_setsClusterIndexToMinusOne() {
+            Movie unrated = Movie.builder().id(2L).title("U1").description("d").genre("G").build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of());
+            when(movieRepository.findUnratedMovies(1L, 5)).thenReturn(List.of(unrated));
+
+            List<RecommendedMovieResponse> results = recommendationService.getRecommendations(1L);
+
+            assertThat(results.get(0).getClusterIndex()).isEqualTo(-1);
         }
 
         @Test
@@ -321,16 +334,114 @@ class RecommendationServiceTest {
             Movie mShared = Movie.builder().id(3L).title("Shared").description("d").genre("G").embedding(embShared).build();
 
             when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
-            when(userProfileClusterRepository.findByUserId(1L)).thenReturn(List.of(cluster1, cluster2));
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of(cluster1, cluster2));
             when(movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(1L, centroid1, 5))
                     .thenReturn(List.of(m1, mShared));
             when(movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(1L, centroid2, 5))
                     .thenReturn(List.of(m2, mShared));
 
-            List<MovieResponse> results = recommendationService.getRecommendations(1L);
+            List<RecommendedMovieResponse> results = recommendationService.getRecommendations(1L);
 
             assertThat(results).hasSize(3);
-            assertThat(results).extracting(MovieResponse::getTitle).doesNotHaveDuplicates();
+            assertThat(results).extracting(RecommendedMovieResponse::getTitle).doesNotHaveDuplicates();
+        }
+
+        @Test
+        void assignsClusterIndexBasedOnNearestCentroid() {
+            float[] centroid1 = new float[384]; centroid1[0] = 1.0f;
+            float[] centroid2 = new float[384]; centroid2[1] = 1.0f;
+
+            UserProfileCluster cluster1 = UserProfileCluster.builder().userId(1L).centroid(centroid1).build();
+            UserProfileCluster cluster2 = UserProfileCluster.builder().userId(1L).centroid(centroid2).build();
+
+            float[] embCloseToCentroid1 = new float[384]; embCloseToCentroid1[0] = 1.0f;
+
+            Movie movie = Movie.builder().id(1L).title("A").description("d").genre("G").embedding(embCloseToCentroid1).build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of(cluster1, cluster2));
+            when(movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(1L, centroid1, 5)).thenReturn(List.of(movie));
+            when(movieRepository.findTopUnratedMoviesByEmbeddingSimilarity(1L, centroid2, 5)).thenReturn(List.of());
+
+            List<RecommendedMovieResponse> results = recommendationService.getRecommendations(1L);
+
+            assertThat(results).hasSize(1);
+            assertThat(results.get(0).getClusterIndex()).isEqualTo(0);
+        }
+    }
+
+    @Nested
+    class GetTasteProfile {
+
+        @Test
+        void whenUserNotFound_throws() {
+            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> recommendationService.getTasteProfile(99L))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("User not found");
+        }
+
+        @Test
+        void whenNoClusters_returnsEmptyList() {
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of());
+
+            List<TasteProfileResponse> result = recommendationService.getTasteProfile(1L);
+
+            assertThat(result).isEmpty();
+        }
+
+        @Test
+        void groupsMoviesByNearestCluster() {
+            float[] centroid1 = new float[384]; centroid1[0] = 1.0f;
+            float[] centroid2 = new float[384]; centroid2[1] = 1.0f;
+
+            UserProfileCluster cluster1 = UserProfileCluster.builder().userId(1L).centroid(centroid1).build();
+            UserProfileCluster cluster2 = UserProfileCluster.builder().userId(1L).centroid(centroid2).build();
+
+            float[] embA = new float[384]; embA[0] = 1.0f;
+            float[] embB = new float[384]; embB[1] = 1.0f;
+
+            Movie movieA = Movie.builder().id(1L).title("A").genre("Drama").embedding(embA).build();
+            Movie movieB = Movie.builder().id(2L).title("B").genre("Action").embedding(embB).build();
+
+            Rating ratingA = Rating.builder().id(1L).rating(9).movie(movieA).user(User.builder().id(1L).build()).build();
+            Rating ratingB = Rating.builder().id(2L).rating(8).movie(movieB).user(User.builder().id(1L).build()).build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of(cluster1, cluster2));
+            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(ratingA, ratingB));
+
+            List<TasteProfileResponse> result = recommendationService.getTasteProfile(1L);
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).getClusterIndex()).isEqualTo(0);
+            assertThat(result.get(0).getGenres()).containsExactly("Drama");
+            assertThat(result.get(0).getMovieCount()).isEqualTo(1);
+            assertThat(result.get(1).getClusterIndex()).isEqualTo(1);
+            assertThat(result.get(1).getGenres()).containsExactly("Action");
+            assertThat(result.get(1).getMovieCount()).isEqualTo(1);
+        }
+
+        @Test
+        void excludesLowRatingsFromProfile() {
+            float[] centroid = new float[384]; centroid[0] = 1.0f;
+            UserProfileCluster cluster = UserProfileCluster.builder().userId(1L).centroid(centroid).build();
+
+            float[] emb = new float[384]; emb[0] = 1.0f;
+            Movie movie = Movie.builder().id(1L).title("A").genre("Drama").embedding(emb).build();
+            Rating lowRating = Rating.builder().id(1L).rating(5).movie(movie).user(User.builder().id(1L).build()).build();
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user(1L)));
+            when(userProfileClusterRepository.findByUserIdOrderById(1L)).thenReturn(List.of(cluster));
+            when(ratingRepository.findByUserId(1L)).thenReturn(List.of(lowRating));
+
+            List<TasteProfileResponse> result = recommendationService.getTasteProfile(1L);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getMovieCount()).isEqualTo(0);
+            assertThat(result.get(0).getGenres()).isEmpty();
         }
     }
 }

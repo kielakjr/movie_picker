@@ -14,6 +14,8 @@ public interface UserProfileClusterRepository extends JpaRepository<UserProfileC
 
     List<UserProfileCluster> findByUserId(Long userId);
 
+    List<UserProfileCluster> findByUserIdOrderById(Long userId);
+
     @Modifying
     @Transactional
     @Query("DELETE FROM UserProfileCluster c WHERE c.userId = :userId")
