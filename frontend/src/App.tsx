@@ -40,7 +40,9 @@ function App() {
         </button>
       </nav>
       <main>
-        {tab === 'discover' && <SwipeView user={user} />}
+        {tab === 'discover' && (
+          <SwipeView user={user} onRecommendationsUnlocked={() => setTab('recommendations')} />
+        )}
         {tab === 'recommendations' && user && <Recommendations user={user} />}
         {tab === 'recommendations' && !user && (
           <p className="empty-state">Select a user to see recommendations.</p>

@@ -9,7 +9,8 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
     const text = await res.text();
     throw new Error(text || res.statusText);
   }
-  return res.json();
+  const text = await res.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const api = {
@@ -41,4 +42,10 @@ export const api = {
 
   getTasteProfile: (userId: number) =>
     request<TasteProfile[]>(`/api/recommendations/profile/${userId}`),
+
+  discardMovie: (movieId: number, userId: number) =>
+    request<void>('/api/ratings/discard', {
+      method: 'POST',
+      body: JSON.stringify({ movieId, userId }),
+    }),
 };
