@@ -15,6 +15,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             WHERE id NOT IN (
                 SELECT movie_id FROM ratings WHERE user_id = :userId
             )
+            AND id NOT IN (
+                SELECT movie_id FROM discarded_movies WHERE user_id = :userId
+            )
             ORDER BY RANDOM()
             LIMIT 1
             """, nativeQuery = true)
@@ -24,6 +27,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             SELECT * FROM movies
             WHERE id NOT IN (
                 SELECT movie_id FROM ratings WHERE user_id = :userId
+            )
+            AND id NOT IN (
+                SELECT movie_id FROM discarded_movies WHERE user_id = :userId
             )
             ORDER BY embedding <=> CAST(:vector AS vector)
             LIMIT 1
@@ -37,6 +43,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             WHERE id NOT IN (
                 SELECT movie_id FROM ratings WHERE user_id = :userId
             )
+            AND id NOT IN (
+                SELECT movie_id FROM discarded_movies WHERE user_id = :userId
+            )
             ORDER BY embedding <=> CAST(:vector AS vector)
             LIMIT :limit
             """, nativeQuery = true)
@@ -49,6 +58,9 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             SELECT * FROM movies
             WHERE id NOT IN (
                 SELECT movie_id FROM ratings WHERE user_id = :userId
+            )
+            AND id NOT IN (
+                SELECT movie_id FROM discarded_movies WHERE user_id = :userId
             )
             LIMIT :limit
             """, nativeQuery = true)

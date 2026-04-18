@@ -25,6 +25,12 @@ public class RatingController {
         return ResponseEntity.created(null).body(ratingService.createRating(request));
     }
 
+    @PostMapping("/discard")
+    public ResponseEntity<Void> discardMovie(@RequestBody @Valid DiscardRequest request) {
+        ratingService.discardMovie(request);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<RatingResponse>> getRatingsByUserId(@PathVariable Long userId) {
         return ResponseEntity.ok(ratingService.getRatingsByUserId(userId));

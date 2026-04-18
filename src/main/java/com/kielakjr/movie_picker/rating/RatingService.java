@@ -18,6 +18,7 @@ public class RatingService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
     private final RecommendationService recommendationService;
+    private final DiscardedMovieRepository discardedMovieRepository;
 
     @Transactional
     public RatingResponse createRating(RatingRequest request) {
@@ -33,6 +34,20 @@ public class RatingService {
         RatingResponse response = mapToResponse(ratingRepository.save(rating));
         recommendationService.updateUserProfile(request.getUserId());
         return response;
+    }
+
+    @Transactional
+    public void discardMovie(DiscardRequest request) {
+        movieRepository.findById(request.getMovieId())
+                .orElseThrow(() -> new IllegalArgumentException("Movie not found"));
+        userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (!discardedMovieRepository.existsByUserIdAndMovieId(request.getUserId(), request.getMovieId())) {
+            discardedMovieRepository.save(DiscardedMovie.builder()
+                    .userId(request.getUserId())
+                    .movieId(request.getMovieId())
+                    .build());
+        }
     }
 
     public List<RatingResponse> getRatingsByUserId(Long userId) {
